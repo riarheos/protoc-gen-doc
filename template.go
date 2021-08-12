@@ -234,6 +234,7 @@ type MessageField struct {
 	FullType     string `json:"fullType"`
 	IsMap        bool   `json:"ismap"`
 	IsOneof      bool   `json:"isoneof"`
+        IsConnect    bool   `json:"isconnect"`
 	OneofDecl    string `json:"oneofdecl"`
 	DefaultValue string `json:"defaultValue"`
 
@@ -484,6 +485,7 @@ func parseMessageField(pf *protokit.FieldDescriptor, oneofDecls []*descriptor.On
 		DefaultValue: pf.GetDefaultValue(),
 		Options:      mergeOptions(extractOptions(pf.GetOptions()), extensions.Transform(pf.OptionExtensions)),
 		IsOneof:      pf.OneofIndex != nil,
+                IsConnect:    strings.HasPrefix(ft, "connect"),
 	}
 
 	if m.IsOneof {
@@ -573,7 +575,20 @@ func description(comment string) string {
 		return ""
 	}
 
-	return val
+	vals := strings.Split(val, "\n")
+	for i, v := range vals {
+		if strings.HasPrefix(v, "MVP: ") {
+			vals[i] = "<div style=\"color:red\">" + v + "</div>"
+		}
+		if strings.HasPrefix(v, "link: ") {
+			vals[i] = "<a href=\"" + strings.Replace(v, "link: ", "", 1) + "\">Подробнее.</a>"
+		}
+		if strings.HasPrefix(v, "*") {
+			vals[i] = "\n" + v
+		}
+	}
+
+	return strings.Join(vals, " ")
 }
 
 type orderedEnums []*Enum
